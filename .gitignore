@@ -10,7 +10,8 @@ wheels/
 .venv
 
 # custom
-data/
 .DS_Store
 secrets/
+*.jsonl
+*.json
 *.lock

@@ -1,0 +1,47 @@
+---
+title: "test!"
+
+format:
+  html:
+    code-fold: true
+
+server: shiny 
+---
+
+<!-- 
+Til meg selv: 
+Kjør `quarto preview index.qmd` i datafortelling-mappen. 
+Husk å aktivere venv! 
+-->
+
+```{python}
+#| title: pingus
+#| content: card-toolbar
+#| variable: ["1", "2"]
+```
+
+```{python}
+import polars as pl
+import plotly.express as px
+from data_setup import combine_data_sources
+from shiny import render, reactive, ui
+
+year = 2025
+df_ = combine_data_sources()
+df = df_.filter(pl.col("track_played_utc").dt.year() == year)
+df.sort(pl.col("track_played_utc"), descending=False).head()
+```
+# {.sidebar}
+
+```{python}
+months = list(range(1, 13))
+ui.input_select("month", "fart",  choices=months)
+```
+
+```{python}
+@render.data_frame
+def month_filter():
+  data = df.filter(pl.col("track_played_utc").dt.month == input.month())
+  return data
+
+```

@@ -36,16 +36,20 @@ df = df_.filter(pl.col("track_played_utc").dt.year() == year)
 ```
 
 Ulikt Spotify teller Last.fm i "scrobbles" som tilsier at du har hørt på en låt, og skiller seg
-derfor fra Spotify sine antall minutter som de viser i sin "Wrapped." 
+derfor fra Spotify sine antall minutter som de viser i sin "Wrapped"^[Så klart kan jeg berike
+datasettet mitt ved å hente ut informasjon om hver eneste låt, men i denne omgang så er jeg
+fornøyd med kun frekvensen av lytting.].
 
 I 2025 har lyttingen en nedgang i antall scrobbles på 18% fra året før og er det laveste
 tallet de siste 5 årene. Ved min egen oppfatning er ikke denne nedgangen noe overraskende da
-jeg har forsøkt å kutte ut musikk som bakgrunnstøy når jeg gjør noe f.eks. jobbe med noe, surfe
-på nettet eller er ute og går.
+jeg har forsøkt å kutte ut musikk som bakgrunnstøy når jeg gjør noe f.eks. jobbe med noe
+studierelatert, diverse husarbeid, surfe på nettet eller er ute og går.
 
 ## Lyttetrend utover 2025
 ```{python}
 from scipy.signal import savgol_filter
+import numpy as np
+from scipy.fft import dct, idct
 
 df_trend = (
     df
@@ -57,22 +61,34 @@ df_trend = (
 
 signal = df_trend.select("n_scrobbles").to_numpy().flatten()
 filtered_signal = savgol_filter(signal, window_length=15, polyorder=3)
-df_trend = df_trend.with_columns(trend_scrobbles=filtered_signal)
+df_trend = df_trend.with_columns(svg_trend_scrobbles=filtered_signal)
 
+# Alternatively, use DCT to smooth out the signal to retrieve the trend
+fourier_signal = dct(df_trend["n_scrobbles"].to_numpy().flatten())
+W = np.arange(0, fourier_signal.shape[0])
+filtered_fourier_signal = fourier_signal.copy()
+filtered_fourier_signal[(W>70)] = 0
+cut_signal = idct(filtered_fourier_signal)
+df_trend = df_trend.with_columns(dct_trend_scrobbles=cut_signal)
+ 
 px.line(
-    df_trend, x="track_played_utc", y=["n_scrobbles", "trend_scrobbles"],
+    df_trend, x="track_played_utc", y=["n_scrobbles", "svg_trend_scrobbles", "dct_trend_scrobbles"],
     )
 ```
 
 Ved å bruke et Savitzky-Golay filter kan vi tydeliggjøre trenden over hvordan lyttemønsteret
-mitt har utviklet seg utover året. Vi ser at store deler av lyttingen er blitt unnagjort i den
-første halvdelen av året. Naturlig kommer dette av at jeg jobbet med masteroppgaven min i
-disse månedene, hvor vi ser en stor nedgang i aktivitet utover junimåned (sett gjennom 
-`trend_scrobbles`).
+mitt har utviklet seg utover året. 
+
+Mesteparten av av lyttingen er blitt unnagjort i den første halvdelen av året. Naturlig kommer
+dette av at jeg jobbet med masteroppgaven min i disse månedene, hvor vi ser en stor nedgang i
+aktivitet utover junimåned med færre forpliktelser (sett gjennom `trend_scrobbles`). 
+
+Allikevel kan nedgangen også skyldes, som nevnt ovenfor, fokuset på å ikke ha noe i øret til en
+hver tid. Nedgangen kan også skyldes at tiden som ellers hadde blitt brukt på musikk har gått
+over til noe annet, som podcasts for eksempel eller støy, som Last.fm ikke tar hensyn til.
 
 Det som er interessant å bemerke seg er det repeterende mønsteret i andre halvdel av året hvor
 man har en topp etterfulgt av en mindre topp som så daler ned i bunn fra august av.
-
 
 ```{python}
 ( 
@@ -89,6 +105,123 @@ hendelser, og igjen naturlig nok er dette knyttet opp mot masteren:
  * `2025-06-12` på toppen er dagen før muntlig forsvar,
 
  * `2025-05-13` og `2025-05-14` er de to foreløpende dagene til innlevering av oppgaven.
+
+## Lyttingen sett gjennom histogrammer
+
+```{python}
+df_trend_stats = ( 
+  df_trend.select(
+    pl.col("n_scrobbles").mean().alias("mean_scrobbles"),
+    pl.col("n_scrobbles").std().alias("std_scrobbles"),
+    pl.col("n_scrobbles").median().alias("median_scrobbles").cast(int),
+  )
+)
+df_trend_stats
+```
+
+```{python}
+import plotly.graph_objects as go
+
+fig_scrobble_freq = px.histogram(
+    df_trend, 
+    x="n_scrobbles", 
+    nbins=20,
+    title="Frekvens av scrobbles i løpet av en dag"
+    )
+fig_scrobble_freq.update_layout(
+  bargap=0.2,
+  xaxis=dict(title="antall scrobbles"),
+  yaxis=dict(title="frekvens av scrobbles per dag")
+  )
+
+mean_value = df_trend_stats["mean_scrobbles"][0]
+median_value = df_trend_stats["median_scrobbles"][0]
+
+fig_scrobble_freq.add_vline(
+    x=mean_value,
+    line_dash="dash",
+    line_color="red",
+    annotation_text=f"Gjennomsnitt: {mean_value:.2f}",
+    annotation_position="top right"
+)
+fig_scrobble_freq.add_vline(
+    x=median_value,
+    line_dash="dash",
+    line_color="white",
+    annotation_text=f"Median: {median_value:.2f}",
+    annotation_position="top left"
+)
+fig_scrobble_freq.show()
+```
+Når vi plotter histogrammet av frekvensen ser vi at fordelingen er skjev med topp på
+venstresiden og en hale mot høyre. Vi ser at det er av det sjeldnere slag at jeg lytter gjennom
+70 låter på én dag.  
+
+```{python}
+
+# hourly histogram
+df_peak_hours = (
+  df
+  .group_by(
+    pl.col("track_played_utc")
+    .dt.convert_time_zone(time_zone="Europe/Berlin")
+    .dt.hour().alias("hour")
+  )
+  .agg(scrobbles_by_hour = pl.len()) 
+  .sort("scrobbles_by_hour", descending=True)
+)
+
+fig_hour_hist = px.histogram(
+    df_peak_hours, 
+    x="hour", 
+    y="scrobbles_by_hour", 
+    nbins=24, 
+    text_auto=".0f",
+    title="Frekvens av scrobbles gjennom døgnets timer"
+)
+fig_hour_hist.update_layout(
+  bargap=0.2,
+  xaxis=dict(title="time"),
+  yaxis=dict(title="antall scrobbles")
+  )
+fig_hour_hist.update_traces(textfont_size=10, textangle=0, textposition="outside", cliponaxis=False)
+```
+Ut ifra den fordelingen av døgnets timer er det klart at mesteparten av lyttingen foregår i
+nitiden fram firetiden, etterfulgt av en periode fra fire til syv på ettermiddagen; vi har en
+bimodal fordeling hvor det er størst aktivitet på formiddagen etterfulgt av en mindre aktiv
+periode på ettermiddagstid.
+
+```{python}
+# daily histogram
+weekdays = {1: "Mandag", 2: "Tirsdag", 3: "Onsdag", 4: "Torsdag",
+            5: "Fredag", 6: "Lørdag", 7: "Søndag"}
+
+df_daily_hist = (df
+    .group_by(pl.col("track_played_utc").dt.weekday().alias("weekday_idx"))
+    .agg(scrobbles_by_weekday = pl.len())
+    .sort("scrobbles_by_weekday", descending=True)
+    .with_columns(weekday = pl.col("weekday_idx").replace_strict(weekdays, default=None).alias("weekday"))
+)
+
+fig_daily_hist = px.histogram(
+    df_daily_hist, 
+    x="weekday", 
+    y="scrobbles_by_weekday", 
+    nbins=7, 
+    text_auto=".0f",
+    category_orders={"weekday": list(weekdays.values())},
+    title="Frekvens av scrobbles i ukedagene"
+)
+fig_daily_hist.update_layout(
+  bargap=0.2, 
+  xaxis=dict(title="ukedag"), 
+  yaxis=dict(title="antall scrobbles")
+)
+fig_daily_hist.update_traces(textfont_size=10, textangle=0, textposition="outside", cliponaxis=False)
+```
+
+Av hverdagene (man-fre) er det tirsdag som ikke helt er på samme nivå som resten. Lørdag og
+søndag derimot ser vi en sterk nedgang i musikklytting.
 
 
 ## Sammenhengende lytting
@@ -129,8 +262,7 @@ Dette er for meg overraskende men samtidig ikke. At jeg har klart å oppretthold
 på 212 dager er imponerende, men at det kun har vært 2 dager av det foregående året hvor
 jeg ikke åpnet opp Spotify-appen er urovekkende.
 
-For å sette dette i perspektiv kan vi se på heatmappet under^[Her får jeg ikke helt til å ordne
-opp i de store sidemarginene av plottet.]
+For å sette dette i perspektiv kan vi se på heatmappet under:
 
 ```{python}
 import plotly.graph_objects as go
@@ -199,64 +331,8 @@ fig_heatmap.show()
 
 _Vurdere å ha ett heatmap for H1 og ett for H2 for å få fram bedre nyanser_
 
-## Når foregår lyttingen?
 
-```{python}
 
-# hourly histogram
-df_peak_hours = (
-  df
-  .group_by(
-    pl.col("track_played_utc")
-    .dt.convert_time_zone(time_zone="Europe/Berlin")
-    .dt.hour().alias("hour")
-  )
-  .agg(scrobbles_by_hour = pl.len()) 
-  .sort("scrobbles_by_hour", descending=True)
-)
-
-fig_hour_hist = px.histogram(
-  df_peak_hours, x="hour", y="scrobbles_by_hour", nbins=24, text_auto=".0f",
-)
-fig_hour_hist.update_layout(
-  bargap=0.2,
-  xaxis=dict(title="time"),
-  yaxis=dict(title="antall scrobbles")
-  )
-fig_hour_hist.update_traces(textfont_size=10, textangle=0, textposition="outside", cliponaxis=False)
-```
-
-```{python}
-# daily histogram
-weekdays = {1: "Mandag", 2: "Tirsdag", 3: "Onsdag", 4: "Torsdag",
-            5: "Fredag", 6: "Lørdag", 7: "Søndag"}
-
-df_daily_hist = (df
-    .group_by(pl.col("track_played_utc").dt.weekday().alias("weekday_idx"))
-    .agg(scrobbles_by_weekday = pl.len())
-    .sort("scrobbles_by_weekday", descending=True)
-    .with_columns(weekday = pl.col("weekday_idx").replace_strict(weekdays, default=None).alias("weekday"))
-)
-
-fig_daily_hist = px.histogram(
-  df_daily_hist, x="weekday", y="scrobbles_by_weekday", nbins=7, text_auto=".0f",
-  category_orders={"weekday": list(weekdays.values())}
-)
-fig_daily_hist.update_layout(
-  bargap=0.2, 
-  xaxis=dict(title="ukedag"), 
-  yaxis=dict(title="antall scrobbles")
-)
-fig_daily_hist.update_traces(textfont_size=10, textangle=0, textposition="outside", cliponaxis=False)
-```
-
-Ut ifra den fordelingen av døgnets timer er det klart at mesteparten av lyttingen foregår i
-nitiden fram firetiden, etterfulgt av en periode fra fire til syv på ettermiddagen; vi har en
-bimodal fordeling hvor det er størst aktivitet på formiddagen etterfulgt av en mindre aktiv
-periode på ettermiddagstid.
-
-Av hverdagene (man-fre) er det tirsdag som ikke helt er på samme nivå som resten. Lørdag og
-søndag derimot ser vi en sterk nedgang i musikklytting.
 
 
 <!-- ## Test -->

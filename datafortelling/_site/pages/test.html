@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>crack – Quarto Template</title>
+<title>test! – Quarto Template</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -58,7 +58,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </style>
 
 
-<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js" integrity="sha384-ZvpUoO/+PpLXR1lu4jmpXWu80pZlYUAfxl5NsBMWOEPSjUn/6Z/hRTt8+pR6L4N2" crossorigin="anonymous"></script><script src="../site_libs/quarto-nav/quarto-nav.js"></script>
 <script src="../site_libs/quarto-nav/headroom.min.js"></script>
 <script src="../site_libs/clipboard/clipboard.min.js"></script>
 <script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
@@ -103,6 +103,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     "search-label": "Search"
   }
 }</script>
+<script src="https://cdn.jsdelivr.net/npm/requirejs@2.3.6/require.min.js" integrity="sha384-c9c+LnTbwQ3aujuU7ULEPVvgLs+Fn6fJUvIGTsuu1ZcCf11fiEubah0ttpca4ntM sha384-6V1/AdqZRWk1KAlWbKBlGhN7VG4iE/yAZcO6NZPMF8od0vukrvr0tg4qY6NSrItx" crossorigin="anonymous"></script>
+
+<script type="application/javascript">define('jquery', [],function() {return window.jQuery;})</script>
 
 
 </head>
@@ -116,7 +119,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../pages/TODO.html">crack</a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../pages/test.html">test!</a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
       <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
@@ -149,7 +152,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../pages/TODO.html" class="sidebar-item-text sidebar-link active">
+  <a href="../pages/TODO.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">crack</span></a>
   </div>
 </li>
@@ -161,7 +164,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../pages/test.html" class="sidebar-item-text sidebar-link">
+  <a href="../pages/test.html" class="sidebar-item-text sidebar-link active">
  <span class="menu-text">test!</span></a>
   </div>
 </li>
@@ -176,7 +179,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">crack</h1>
+<h1 class="title">test!</h1>
 </div>
 
 
@@ -193,30 +196,159 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<div id="4763d1a0" class="cell" data-execution_count="1">
+<!-- 
+Til meg selv: 
+Kjør `quarto preview index.qmd` i datafortelling-mappen. 
+Husk å aktivere venv! 
+-->
+<div id="675932ff" class="cell" data-execution_count="1">
 <details class="code-fold">
 <summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>r <span class="op">=</span> np.arange(<span class="dv">0</span>, <span class="dv">2</span>, <span class="fl">0.01</span>)</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>theta <span class="op">=</span> <span class="dv">2</span> <span class="op">*</span> np.pi <span class="op">*</span> r</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots(subplot_kw<span class="op">=</span>{<span class="st">"projection"</span>: <span class="st">"polar"</span>})</span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>ax.plot(theta, r)</span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>ax.set_rticks([<span class="fl">0.5</span>, <span class="dv">1</span>, <span class="fl">1.5</span>, <span class="dv">2</span>])</span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>ax.grid(<span class="va">True</span>)</span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> polars <span class="im">as</span> pl</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> plotly.express <span class="im">as</span> px</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> data_setup <span class="im">import</span> combine_data_sources</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> shiny <span class="im">import</span> render, reactive, ui</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>year <span class="op">=</span> <span class="dv">2025</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>df_ <span class="op">=</span> combine_data_sources()</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> df_.<span class="bu">filter</span>(pl.col(<span class="st">"track_played_utc"</span>).dt.year() <span class="op">==</span> year)</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>df.sort(pl.col(<span class="st">"track_played_utc"</span>), descending<span class="op">=</span><span class="va">False</span>).head()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
-<div class="cell-output cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="TODO_files/figure-html/cell-2-output-1.png" width="450" height="439" class="figure-img"></p>
-</figure>
+<div class="cell-output cell-output-display" data-execution_count="31">
+<div><style>
+.dataframe > thead > tr,
+.dataframe > tbody > tr {
+  text-align: right;
+  white-space: pre-wrap;
+}
+</style>
+<small>shape: (5, 9)</small>
+<table class="dataframe caption-top table table-sm table-striped small" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th">track_played_utc</th>
+<th data-quarto-table-cell-role="th">date_played_unix</th>
+<th data-quarto-table-cell-role="th">track_name</th>
+<th data-quarto-table-cell-role="th">artist_name</th>
+<th data-quarto-table-cell-role="th">album_name</th>
+<th data-quarto-table-cell-role="th">track_mbid</th>
+<th data-quarto-table-cell-role="th">artist_mbid</th>
+<th data-quarto-table-cell-role="th">album_mbid</th>
+<th data-quarto-table-cell-role="th">spotify_track_uri</th>
+</tr>
+<tr class="even">
+<td>datetime[μs]</td>
+<td>i64</td>
+<td>str</td>
+<td>str</td>
+<td>str</td>
+<td>str</td>
+<td>str</td>
+<td>str</td>
+<td>str</td>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>2025-01-01 01:07:47</td>
+<td>1735693667</td>
+<td>"Europaträume"</td>
+<td>"Brutalismus 3000"</td>
+<td>"GOODBYE SALÒ"</td>
+<td>"a8902a2d-906d-4595-ac0e-68459c…</td>
+<td>"b4cd749e-adce-4cb5-8a73-cdd0c7…</td>
+<td>""</td>
+<td>""</td>
+</tr>
+<tr class="even">
+<td>2025-01-01 01:10:27</td>
+<td>1735693827</td>
+<td>"Can You Feel It?!"</td>
+<td>"Mutilator"</td>
+<td>"Can You Feel It?!"</td>
+<td>""</td>
+<td>"b239fbf8-782b-4dc0-85eb-3ff4d6…</td>
+<td>""</td>
+<td>""</td>
+</tr>
+<tr class="odd">
+<td>2025-01-01 01:15:13</td>
+<td>1735694113</td>
+<td>"We Both Suffocate"</td>
+<td>"Snow Strippers"</td>
+<td>"April Mixtape 2"</td>
+<td>"27a98bf0-a2fb-4b67-bb69-84fc52…</td>
+<td>"33243fef-ce1a-4ba7-a81e-ec72e4…</td>
+<td>"3c39c467-3e37-4a41-b530-b68429…</td>
+<td>""</td>
+</tr>
+<tr class="even">
+<td>2025-01-01 01:17:56</td>
+<td>1735694276</td>
+<td>"Stupid (Can’t run from the urg…</td>
+<td>"underscores"</td>
+<td>"Wallsocket (Director's Cut)"</td>
+<td>"404bd1ba-e91a-401c-b4b3-1626ce…</td>
+<td>"ab1a3f85-e0ea-470a-af5c-175447…</td>
+<td>"06efd7a6-f6ee-406d-8575-2c52a0…</td>
+<td>""</td>
+</tr>
+<tr class="odd">
+<td>2025-01-01 17:58:08</td>
+<td>1735754288</td>
+<td>"Hoe-nouns (feat. Thundercat &amp; …</td>
+<td>"Smino"</td>
+<td>"Maybe in Nirvana"</td>
+<td>""</td>
+<td>""</td>
+<td>""</td>
+<td>""</td>
+</tr>
+</tbody>
+</table>
 </div>
 </div>
+</div>
+<section id="section" class="level1 sidebar">
+<h1 class="sidebar"></h1>
+<div id="ff334488" class="cell" data-execution_count="2">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>months <span class="op">=</span> <span class="bu">list</span>(<span class="bu">range</span>(<span class="dv">1</span>, <span class="dv">13</span>))</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>ui.input_select(<span class="st">"month"</span>, <span class="st">"fart"</span>,  choices<span class="op">=</span>months)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-display no-overflow-x" data-execution_count="32">
+<div class="form-group shiny-input-container">
+  <label class="control-label" id="month-label" for="month">fart</label>
+  <div>
+    <select class="shiny-input-select form-select" id="month">      <option value="1" selected="">1</option>
+      <option value="2">2</option>
+      <option value="3">3</option>
+      <option value="4">4</option>
+      <option value="5">5</option>
+      <option value="6">6</option>
+      <option value="7">7</option>
+      <option value="8">8</option>
+      <option value="9">9</option>
+      <option value="10">10</option>
+      <option value="11">11</option>
+      <option value="12">12</option></select>
+  </div>
+</div>
+</div>
+</div>
+<div id="7e1648fc" class="cell" data-execution_count="3">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="at">@render.data_frame</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> month_filter():</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  data <span class="op">=</span> df.<span class="bu">filter</span>(pl.col(<span class="st">"track_played_utc"</span>).dt.month <span class="op">==</span> <span class="bu">input</span>.month())</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> data</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
 </div>
 
 
+</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">

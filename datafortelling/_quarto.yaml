@@ -5,8 +5,10 @@ website:
   title: "Quarto Template"
 
   sidebar:
-      contents:
-        - text: Overview
-          href: index.qmd
-        - pages/TODO.qmd
-        - pages/2025.qmd
+    contents:
+      - text: Overview
+        href: index.qmd
+      - pages/TODO.qmd
+      - pages/2025.qmd
+      - pages/test.qmd
+

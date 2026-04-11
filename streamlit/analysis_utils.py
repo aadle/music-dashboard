@@ -47,7 +47,6 @@ def listening_streak(df:pl.DataFrame, year:int=2025):
     return streak_stats
 
 def unique_artists(df, year:int=2025):
-
     if year < 2017:
         raise ValueError("No data before 2017 is available.")
 

@@ -12,7 +12,9 @@ def main():
             "track_played_utc"
         )
     )
-    pass
+
+    output_dir = Path("../data/lastfm")
+    df.write_parquet(output_dir / "lastfm-listening-2021-2026.parquet")
 
 
 if __name__ == "__main__":

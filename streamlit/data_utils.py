@@ -1,21 +1,14 @@
 from pathlib import Path
-import duckdb
 import polars as pl
 
 
 def combine_data_sources():
-    lastfm_path = Path("../data/lastfm/listening")
-    spotify_path = Path("../data/spotify")
+    lastfm_path = Path("data/lastfm")
+    spotify_path = Path("data/spotify")
 
-    # TODO: replace with loading in Parquet-file in place of jsonl, directly using
-    # Polars without needing to use DuckDB
-    # setting up the last.fm data
-    lastfm_db = duckdb.read_json(lastfm_path / "*.jsonl")
-    lastfm_df = lastfm_db.pl()
-    lastfm_df = lastfm_df.with_columns(
-        pl.from_epoch(pl.col("date_played_unix"), time_unit="s").alias(
-            "track_played_utc"
-        )
+    # read in lastfm-data
+    lastfm_df = pl.read_parquet(
+        lastfm_path / "lastfm-listening-2021-2026march.parquet"
     )
     lastfm_df = lastfm_df.unique(pl.col("date_played_unix"))
 
@@ -32,6 +25,7 @@ def combine_data_sources():
         artist_mbid=pl.lit(""), album_mbid=pl.lit(""), track_mbid=pl.lit("")
     )
 
+    # rearrange the columns
     cols = [
         "track_played_utc",
         "date_played_unix",
@@ -43,7 +37,6 @@ def combine_data_sources():
         "album_mbid",
         "spotify_track_uri",
     ]
-
     lastfm_df = lastfm_df.select(cols)
     spotify_df = spotify_df.select(cols)
 
@@ -51,7 +44,9 @@ def combine_data_sources():
         pl.col("date_played_unix"), descending=False
     )
 
-    return df.filter(pl.col("artist_name").is_not_null())
+    return df.filter(
+        pl.col("artist_name").is_not_null()
+    )  # some entries have no data except track played. We do not take them into consideration
 
 
 def main():

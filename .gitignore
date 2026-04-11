@@ -15,3 +15,4 @@ secrets/
 *.jsonl
 *.json
 *.lock
+pyproject.toml

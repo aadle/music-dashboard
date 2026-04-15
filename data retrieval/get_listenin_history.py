@@ -65,7 +65,7 @@ def main(client_id:str, page=1):
     to_timestamp = int(pendulum.today().add(days=-1).timestamp())
 
     request_parameters = {
-        "limit": NUM_REQUEST,
+        "limit": NUM_REQUESTS,
         "user": USER,
         "from": from_timestamp,
         "to": to_timestamp,

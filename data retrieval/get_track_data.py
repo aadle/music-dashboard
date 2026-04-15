@@ -4,6 +4,7 @@ import logging
 import time
 import tomllib
 import polars as pl
+import json
 from requests import RequestException
 from pathlib import Path
 from typing import Dict
@@ -26,15 +27,11 @@ def get_track_table():
         artist_mbid=pl.lit(""), album_mbid=pl.lit(""), track_mbid=pl.lit("")
     )
     cols = [
-        "track_played_utc",
         "date_played_unix",
+        "track_played_utc",
         "track_name",
         "artist_name",
-        "album_name",
         "track_mbid",
-        "artist_mbid",
-        "album_mbid",
-        "spotify_track_uri",
     ]
     lastfm_df = lastfm_df.select(cols)
     spotify_df = spotify_df.select(cols)
@@ -59,8 +56,7 @@ def get_lastfm_data(request_parameters:dict, max_retries=3) -> Dict:
     
             if "error" in data:
                 logging.error(f"API error: {data.get('message')}. Code: {data.get('error')}")
-                raise ValueError(f"API returned error: {data.get('error')}")
-
+                # raise ValueError(f"API returned error: {data.get('error')}")
             return data
 
         except RequestException as e:
@@ -74,33 +70,40 @@ def get_lastfm_data(request_parameters:dict, max_retries=3) -> Dict:
 
 def extract_track_data(response:dict):
     out_dict = {}
+    track_data = response.get("track")
 
     # track info
-    track_data = response.get("track")
     out_dict["track_name"] = track_data.get("name")
     out_dict["track_mbid"] = track_data.get("mbid")
     out_dict["track_duration"] = track_data.get("duration")
 
-    # last 
-    out_dict["listeners"] = response.get("listeners")
-    out_dict["playcount"] = response.get("playcount")
+    out_dict["artist"] = track_data.get("artist").get("name")
 
-    album_data = response.get("album")
-    out_dict["artist"] = album_data.get("artist")
-    out_dict["album_title"] = album_data.get("title")
-    out_dict["album_mbid"] = album_data.get("mbid")
-    out_dict["album_image_url"] = album_data.get("image")[2].get("#text")
+    # last.fm statistics
+    out_dict["listeners"] = track_data.get("listeners")
+    out_dict["playcount"] = track_data.get("playcount")
 
-    toptags = response.get("toptags")
+    # album info
+    if "album" in track_data.keys():
+        album_data = track_data.get("album")
+        out_dict["album_title"] = album_data.get("title")
+        out_dict["album_mbid"] = album_data.get("mbid")
+        out_dict["album_image_url"] = album_data.get("image")[2].get("#text")
+    else:
+        out_dict["album_title"] = None
+        out_dict["album_mbid"] = None
+        out_dict["album_image_url"] = None
+
+    # get user set genre tags, if available 
+    toptags = track_data.get("toptags").get("tag")
     out_dict["genre_tags"] = [tag.get("name") for tag in toptags] if toptags else None
     return out_dict
 
 def main(client_id:str):
     setup_logging(get_current_filename())
 
-    out_dir = Path("../data/lastfm/tracks/2025-2026").mkdir(
-        parents=True, exist_ok=True
-    )
+    out_dir = Path("../data/lastfm/tracks/2025-2026")
+    out_dir.mkdir(parents=True, exist_ok=True)
     base_filename = "lastfm_track_data_2021-2026"
 
     # Load in listening data
@@ -111,10 +114,15 @@ def main(client_id:str):
         "method": "track.getInfo",
         "artist": None,
         "track": None,
-        "autocorrect": 1
+        "autocorrect": 1,
+        "format": "json"
     }
 
-    for track in track_records:
+    file_idx = 0
+    for idx, track in enumerate(track_records, 1):
+        if (idx % 2000) == 0:
+            file_idx += 1
+
         # update request parameters
         request_parameters["artist"] = track.get("artist_name")
         request_parameters["track"] = track.get("track_name")
@@ -123,10 +131,24 @@ def main(client_id:str):
         )
 
         response = get_lastfm_data(request_parameters)
+        if "Track not found" in response.values():
+            logging.warning(
+                f"{request_parameters.get("track")} by {request_parameters.get("artist")} is not available in Last.fm's database."
+            )
+            continue
+        
+        # appending entry to file
         extracted_data = extract_track_data(response)
+        with open(out_dir/f"{base_filename}_{file_idx}.jsonl", "a") as outfile:
+            outfile.write(json.dumps(extracted_data) + "\n")
 
-        file_ticker = 0
-        # dump to file, append mode
+        logging.info(f"{idx}. {request_parameters.get("track")} by {request_parameters.get("artist")} have been processed.")
+
+        if (idx % 500) == 0:
+            logging.info(f"{idx} tracks processed.")
+            time.sleep(5)
+
+        time.sleep(0.3)
 
 if __name__ == "__main__":
     secrets = Path("../secrets")

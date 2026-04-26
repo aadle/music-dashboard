@@ -16,11 +16,11 @@ st.session_state["scrobble_data"] = df
 # Yearly analysis pages
 analysis_2025 = st.Page("yearly analysis/analysis_2025.py", title="2025",
                         default=True)
-analysis_foo = st.Page("yearly analysis/foo.py", title="foo",
+overview = st.Page("yearly analysis/overview.py", title="overview",
                         )
 
 pg = st.navigation(
-    {"Yearly analysis": [analysis_2025, analysis_foo],}
+    {"Yearly analysis": [analysis_2025, overview],}
 )
 
 pg.run()

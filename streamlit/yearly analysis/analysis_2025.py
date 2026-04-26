@@ -781,19 +781,19 @@ previous_month = get_monthly_metrics(df_monthly_prev)
 monthly_metric_cols = st.columns(3)
 with monthly_metric_cols[0]:
     st.metric(
-        "n tracks played",
+        "antall låter avspilt",
         current_month["n_tracks"],
         delta=current_month["n_tracks"] - previous_month["n_tracks"],
     )
 with monthly_metric_cols[1]:
     st.metric(
-        "unique tracks played",
+        "unike låter avspilt",
         current_month["unique_tracks"],
         delta=current_month["unique_tracks"] - previous_month["unique_tracks"],
     )
 with monthly_metric_cols[2]:
     st.metric(
-        "unique artists played",
+        "unike artister avspilt",
         current_month["unique_artists"],
         delta=current_month["unique_artists"] - previous_month["unique_artists"],
     )
@@ -811,10 +811,10 @@ unique_monthly_tracks = df_monthly_artists.select(pl.col("track_name").unique())
 
 monthly_top_track = df_monthly_artists.row(0, named=True)
 monthly_top_artist = monthly_top_n_artists.row(1)
-st.metric("sang mest på repeat", 
+st.metric("månedens sang på hjernen", 
           f"'{monthly_top_track["track_name"]}' av {monthly_top_track["artist_name"]}"
           )
-daily_obsession_monthly = (
+most_repeated_a_day_monthly = (
     df_monthly
     .group_by(
         pl.col("track_played_utc").dt.date().alias("date"),
@@ -826,15 +826,13 @@ daily_obsession_monthly = (
     .row(0, named=True)
 )
 
-st.markdown(
-    """
-    du spilte av {} {} ganger {}
-    """.format(
-        daily_obsession_monthly.get("track_name"),
-        daily_obsession_monthly.get("n_scrobbles"),
-        daily_obsession_monthly.get("date"),
-    )
+most_repeated_a_day = "'{}' av {} ble spilt av {} ganger den {}".format(
+    most_repeated_a_day_monthly.get("track_name"),
+    most_repeated_a_day_monthly.get("artist_name"),
+    most_repeated_a_day_monthly.get("n_scrobbles"),
+    most_repeated_a_day_monthly.get("date"),
 )
+st.metric("mest repeterte låt på en dag", most_repeated_a_day)
 
 monthly_table_1, monthly_table_2 = st.columns([0.6, 0.4])
 with monthly_table_1:

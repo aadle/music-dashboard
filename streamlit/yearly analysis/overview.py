@@ -137,7 +137,7 @@ with artist_cols[1]:
         st.dataframe(df_artist_newcomers)
 st.caption(
     """
-    En nykommer i denne forstand er en artister som ikke har spilt i de 
+    En nykommer i denne forstand er artister som ikke har blitt spilt i de 
     foregående årene.
     """
 )

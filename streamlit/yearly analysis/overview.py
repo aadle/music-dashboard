@@ -1,4 +1,5 @@
 import streamlit as st
+import plotly.graph_objects as go
 import polars as pl
 
 st.set_page_config(layout="centered")
@@ -81,11 +82,13 @@ with st.container():
 st.caption(
     """
     'artist diversity ratio' regnes ut ved å ta antall unike artister man har
-    spilt av over antall låter spilt av. Jo lavere scoren er, jo mer divers er
-    lyttingen i sin helhet.
+    spilt av over antall låter spilt av. Jo lavere prosentandelen er, jo mer 
+    mangfoldig er lyttingen i sin helhet.
     """
 )
 
+
+# -------------- Artister --------------
 # get listening data before the set year
 def artist_newcomers(full_df, year):
     def unique_artist_scrobbles(df):
@@ -118,42 +121,207 @@ df_top_artists = (
     .group_by(pl.col("artist_name"))
     .agg(scrobbles=pl.len())
     .sort("scrobbles", descending=True)
-    .with_columns(pct_listening = pl.col("scrobbles")/pl.col("scrobbles").sum())
+    .with_columns(pct_listening = pl.col("scrobbles")/pl.col("scrobbles").sum() * 100)
 )
 top_artist = df_top_artists.row(0, named=True)
 
-st.subheader("artister")
-artist_tables = st.toggle("vis tabeller", False)
-artist_cols = st.columns(2)
-# topp artist
-with artist_cols[0]:
-    st.metric("Mest avspilte artist", top_artist["artist_name"])
-    if artist_tables:
-        st.dataframe(df_top_artists)
-# nykommer
-with artist_cols[1]:
-    st.metric("Årets nykommer", top_newcomer["artist_name"])
-    if artist_tables:
-        st.dataframe(df_artist_newcomers)
-st.caption(
-    """
-    En nykommer i denne forstand er artister som ikke har blitt spilt i de 
-    foregående årene.
-    """
-)
+with st.container():
+    st.subheader("artister")
+    artist_tables = st.toggle("vis tabeller", False)
+    artist_cols = st.columns(2)
+    # topp artist
+    with artist_cols[0]:
+        st.metric("Mest avspilte artist", top_artist["artist_name"])
+        if artist_tables:
+            st.dataframe(df_top_artists)
+    # nykommer
+    with artist_cols[1]:
+        st.metric("Årets nykommer", top_newcomer["artist_name"])
+        if artist_tables:
+            st.dataframe(df_artist_newcomers)
+    st.caption(
+        """
+        En nykommer i denne forstand er artister som ikke har blitt spilt i de 
+        foregående årene.
+        """
+    )
 
+# -------------- Låter --------------
 # topp låt
 df_top_tracks = (
     df_current
     .group_by(pl.col("track_name"), pl.col("artist_name"))
     .agg(scrobbles=pl.len())
-    .sort("scrobbles", descending=True)
+    .sort([ "scrobbles", "artist_name" ], descending=[ True, False])
+
 )
+df_one_hit_pony = (
+    df_current.group_by(pl.col("artist_name"))
+    .agg(
+        track_name=pl.col("track_name").unique().first(),
+        scrobbles=pl.len(),
+        unique_tracks=pl.col("track_name").unique().len(),
+    )
+    .filter(pl.col("unique_tracks") == 1)
+    .filter(pl.col("scrobbles") > 2)
+    .sort([ "scrobbles", "artist_name" ], descending=[ True, False])
+    .drop("unique_tracks")
+    .select("track_name", "artist_name", "scrobbles")
+)
+
 top_track = df_top_tracks.row(0, named=True)
-st.subheader("låter")
+one_hit_pony = df_one_hit_pony.row(0, named=True)
 with st.container():
-    st.metric("mest avspilte låt", 
-              f"'{top_track["track_name"]}' av {top_track["artist_name"]}"
-              )
-    st.dataframe(df_top_tracks)
+    st.subheader("låter")
+
+    track_cols = st.columns(2)
+    with track_cols[0]:
+        st.metric("mest avspilte låt", 
+                  f"'{top_track["track_name"]}'"
+                  )
+        st.caption(
+            f"""
+            '{top_track["track_name"]}' av {top_track["artist_name"]} har blitt
+            avspilt {top_track["scrobbles"]} ganger.
+            """
+        )
+        st.dataframe(df_top_tracks)
     
+    with track_cols[1]:
+        st.metric(
+            "årets one hit wonder",
+            f"'{one_hit_pony['track_name']}'",
+        )
+        st.caption(
+            f"""
+            
+            '{one_hit_pony["track_name"]}' av {one_hit_pony["artist_name"]} har blitt
+            avspilt {one_hit_pony["scrobbles"]} ganger.
+            """
+        )
+        st.dataframe(df_one_hit_pony)
+    st.caption(
+        """
+        En _one hit wonder_ i denne sammenheng er en artist som jeg kun har 
+        spilt av én sang fra.
+        """
+    )
+
+
+# -------------- Plots --------------
+st.header("plots")
+df_monthly_scrobbles = (
+    df_current
+    .group_by(pl.col("track_played_utc").dt.month().alias("month"))
+    .agg(scrobbles=pl.len())
+    .sort("month", descending=False)
+)
+
+n_monthly = 10
+df_top_n_monthly_tracks = (
+    df_current
+    .group_by(
+        pl.col("track_played_utc").dt.month().alias("month"),
+        "artist_name",
+        "track_name",
+    )
+    .agg(scrobbles=pl.len())
+    .sort(["month", "scrobbles"], descending=[False, True])
+    .group_by("month")
+    .head(n_monthly)
+)
+
+months_dict = {
+    1: "januar",
+    2: "februar",
+    3: "mars",
+    4: "april",
+    5: "mai",
+    6: "juni",
+    7: "juli",
+    8: "august",
+    9: "september",
+    10: "oktober",
+    11: "november",
+    12: "desember",
+}
+
+# Monthly bar chart with hover text
+fig_monthly_histogram = go.Figure()
+fig_monthly_histogram.update_layout(showlegend=False)
+months_list = df_monthly_scrobbles["month"].to_list()
+hover_text = []
+
+for month in months_list:
+    entries = ( 
+        df_top_n_monthly_tracks
+        .filter(pl.col("month") == month)
+        .rows(named=True) 
+    )
+    monthly_scrobbles = df_monthly_scrobbles.filter(pl.col("month") == month)["scrobbles"].item()
+    x_month = months_dict.get(month)
+
+    hover_text_ = f"""<b>antall låter spilt:</b> {monthly_scrobbles}<br><b>Top {n_monthly} tracks:</b><br>"""
+    for idx, entry in enumerate(entries, 1):
+        track_name = entry.get("track_name")
+        artist_name = entry.get("artist_name")
+        scrobbles = entry.get("scrobbles")
+        
+        hover_text_ += f"    <b>{idx}</b>. {track_name} ○ {artist_name} ({scrobbles} scrobbles)<br>"
+
+    fig_monthly_histogram.add_trace(
+        go.Bar(
+            x=[x_month],
+            y=[monthly_scrobbles],
+            hovertext=hover_text_,
+            hoverinfo="text",
+            marker=dict(color="#29B09D")
+        )
+    )
+
+st.plotly_chart(fig_monthly_histogram)
+
+# Weekly barplot
+weekdays = {1: "mandag", 2: "tirsdag", 3: "onsdag", 4: "torsdag",
+            5: "fredag", 6: "lørdag", 7: "søndag"}
+df_weekly_scrobbles = ( 
+    df_current
+    .group_by(pl.col("track_played_utc").dt.weekday().alias("day"))
+    .agg(scrobbles=pl.len())
+    .sort("day", descending=False)
+    .with_columns(
+        day_name=pl.col("day").replace_strict(weekdays)
+    )
+)
+fig_weekday = go.Figure(
+    [
+        go.Bar(
+            y=df_weekly_scrobbles["scrobbles"],
+            x=df_weekly_scrobbles["day_name"],
+            marker=dict(color="#29B09D")
+        )
+    ]
+)
+
+# Hourly barplot
+df_hourly_scrobbles = ( 
+    df_current
+    .group_by(pl.col("track_played_utc").dt.hour().alias("hour"))
+    .agg(scrobbles=pl.len())
+    .sort("hour", descending=False)
+)
+fig_hourly = go.Figure(
+    [
+        go.Bar(
+            y=df_hourly_scrobbles["scrobbles"],
+            x=df_hourly_scrobbles["hour"],
+            marker=dict(color="#29B09D")
+        )
+    ]
+)
+
+weekday_hour_cols = st.columns(2)
+with weekday_hour_cols[0]:
+    st.plotly_chart(fig_weekday)
+with weekday_hour_cols[1]:
+    st.plotly_chart(fig_hourly)

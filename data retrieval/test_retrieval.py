@@ -71,10 +71,16 @@ def main():
     response_out = extract_artist_data(response)
     output_dir = Path("data")
     output_dir.mkdir(exist_ok=True)
+    file_path = output_dir.joinpath("foo.json")
+
+    print(f"Writing to: {file_path.absolute()}")  # Shows full path
+    print(f"Directory exists: {output_dir.exists()}")
+    print(f"Data to write: {response_out}")
     
-    with open(output_dir/"foo.json", "w") as outfile:
+    with open(output_dir.joinpath("foo.json"), "w") as outfile:
         json.dump(response_out, outfile)
 
+    print(f"File exists after write: {file_path.exists()}")
     print("Success!")
 
 if __name__ == "__main__":

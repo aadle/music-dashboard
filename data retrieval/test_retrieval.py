@@ -69,7 +69,7 @@ def main():
     }
     response = make_request(request_parameters)
     response_out = extract_artist_data(response)
-    output_dir = Path("test")
+    output_dir = Path("data")
     output_dir.mkdir(exist_ok=True)
     
     with open(output_dir/"foo.json", "w") as outfile:

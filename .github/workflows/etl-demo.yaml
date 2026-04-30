@@ -42,4 +42,4 @@ jobs:
       - name: Test retrieval
         env:
           CLIENT_ID: ${{ secrets.LAST_FM_CLIENT_ID }}
-A       run: uv run "data\ retrieval/test_retrieval.py"
+          run: uv run "data retrieval/test_retrieval.py"

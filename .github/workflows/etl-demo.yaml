@@ -34,3 +34,12 @@ jobs:
         with:
           # Install a specific version of uv.
           version: "0.11.8"
+
+      - name: Install project
+        run: uv sync --locked
+
+      # todo run a a script to confirm that it is working
+      - name: Test retrieval
+        env:
+          CLIENT_ID: ${{ secrets.LAST_FM_CLIENT_ID }}
+        run: uv run "data\ retrieval/test_retrieval.py"

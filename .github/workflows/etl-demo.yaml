@@ -1,6 +1,9 @@
 name: etl demo
-run-name: ${{ github.actor }} is testing out GitHub Actions ??
-on: [push]
+run-name: ${{ github.actor }} retrieving newest listening data
+on:
+  workflow_displatch:
+  schedule:
+    - cron: "0 0 * * *" # daily at midnight
 
 jobs:
   etl-script:
@@ -39,7 +42,7 @@ jobs:
         run: |
           git config --local user.email "github-actions@github.com"
           git config --local user.name "github-actions"
-          git add . 
+          git add .
           git diff --cached --quiet || echo "changes=true" >> $GITHUB_ENV
 
       - name: Commit and push if changes

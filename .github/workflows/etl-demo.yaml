@@ -30,7 +30,9 @@ jobs:
       - name: Test retrieval
         env:
           CLIENT_ID: ${{ secrets.LAST_FM_CLIENT_ID }}
-        run: uv run "data retrieval/test_retrieval.py"
+        run: |
+          uv run "data retrieval/test_retrieval.py"
+          git status
 
       - name: Check for changes
         id: git-check
@@ -38,7 +40,7 @@ jobs:
           git config --local user.email "github-actions@github.com"
           git config --local user.name "github-actions"
           git add . 
-          git diff --staged --quiet || echo "changes=true" >> $GITHUB_ENV
+          git diff --cached --quiet || echo "changes=true" >> $GITHUB_ENV
 
       - name: Commit and push if changes
         if: ${{ env.changes == 'true' }}

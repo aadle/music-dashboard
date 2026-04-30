@@ -14,4 +14,3 @@ wheels/
 secrets/
 *.jsonl
 *.json
-*.lock

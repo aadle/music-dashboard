@@ -1,6 +1,6 @@
 name: etl demo
 run-name: ${{ github.actor }} is testing out GitHub Actions ??
-# on: [push]
+on: [push]
 
 jobs:
   Explore-GitHub-Actions:

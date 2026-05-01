@@ -6,7 +6,7 @@ st.set_page_config(layout="centered")
 st.html("""
     <style>
         .stMainBlockContainer {
-            max-width:50rem;
+            max-width:60rem;
         }
     </style>
     """
@@ -127,24 +127,30 @@ top_artist = df_top_artists.row(0, named=True)
 
 with st.container():
     st.subheader("artister")
-    artist_tables = st.toggle("vis tabeller", False)
     artist_cols = st.columns(2)
     # topp artist
     with artist_cols[0]:
         st.metric("Mest avspilte artist", top_artist["artist_name"])
-        if artist_tables:
-            st.dataframe(df_top_artists)
     # nykommer
     with artist_cols[1]:
         st.metric("Årets nykommer", top_newcomer["artist_name"])
-        if artist_tables:
+
+with st.expander("vis tabeller"):
+    artist_tables = st.columns(2)
+    with st.container():
+        with artist_tables[0]:
+            st.caption("mest avspilte artister")
+            st.dataframe(df_top_artists)
+        with artist_tables[1]:
+            st.caption("mest avspilte nykommere")
             st.dataframe(df_artist_newcomers)
-    st.caption(
-        """
-        En nykommer i denne forstand er artister som ikke har blitt spilt i de 
-        foregående årene.
-        """
-    )
+
+st.caption(
+    """
+    En nykommer i denne forstand er artister som ikke har blitt spilt i de 
+    foregående årene.
+    """
+)
 
 # -------------- Låter --------------
 # topp låt
@@ -185,7 +191,6 @@ with st.container():
             avspilt {top_track["scrobbles"]} ganger.
             """
         )
-        st.dataframe(df_top_tracks)
     
     with track_cols[1]:
         st.metric(
@@ -199,13 +204,24 @@ with st.container():
             avspilt {one_hit_pony["scrobbles"]} ganger.
             """
         )
-        st.dataframe(df_one_hit_pony)
-    st.caption(
-        """
-        En _one hit wonder_ i denne sammenheng er en artist som jeg kun har 
-        spilt av én sang fra.
-        """
-    )
+
+with st.expander("vis tabeller"):
+    artist_tables = st.columns(2)
+    with st.container():
+        with artist_tables[0]:
+            st.caption("mest avspilte låter")
+            st.dataframe(df_top_tracks)
+        with artist_tables[1]:
+            st.caption("mest avspilte nykommere")
+            st.dataframe(df_one_hit_pony)
+
+
+st.caption(
+    """
+    En _one hit wonder_ i denne sammenheng er en artist som jeg kun har 
+    spilt av én sang fra.
+    """
+)
 
 
 # -------------- Plots --------------
@@ -248,7 +264,10 @@ months_dict = {
 
 # Monthly bar chart with hover text
 fig_monthly_histogram = go.Figure()
-fig_monthly_histogram.update_layout(showlegend=False)
+fig_monthly_histogram.update_layout(
+    showlegend=False, 
+    title=dict(text="månedlig fordeling")
+)
 months_list = df_monthly_scrobbles["month"].to_list()
 hover_text = []
 
@@ -279,7 +298,6 @@ for month in months_list:
         )
     )
 
-st.plotly_chart(fig_monthly_histogram)
 
 # Weekly barplot
 weekdays = {1: "mandag", 2: "tirsdag", 3: "onsdag", 4: "torsdag",
@@ -302,6 +320,7 @@ fig_weekday = go.Figure(
         )
     ]
 )
+fig_weekday.update_layout(title=dict(text="fordelt på ukedagene"))
 
 # Hourly barplot
 df_hourly_scrobbles = ( 
@@ -319,9 +338,12 @@ fig_hourly = go.Figure(
         )
     ]
 )
+fig_hourly.update_layout(title=dict(text="fordelt over døgnets timer"))
 
-weekday_hour_cols = st.columns(2)
-with weekday_hour_cols[0]:
-    st.plotly_chart(fig_weekday)
-with weekday_hour_cols[1]:
-    st.plotly_chart(fig_hourly)
+with st.container():
+    st.plotly_chart(fig_monthly_histogram)
+    weekday_hour_cols = st.columns(2)
+    with weekday_hour_cols[0]:
+        st.plotly_chart(fig_weekday)
+    with weekday_hour_cols[1]:
+        st.plotly_chart(fig_hourly)

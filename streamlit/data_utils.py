@@ -1,16 +1,35 @@
 from pathlib import Path
 import polars as pl
+import duckdb
 
 
 def combine_data_sources():
     lastfm_path = Path("data/lastfm")
     spotify_path = Path("data/spotify")
 
-    # read in lastfm-data
+    # read in lastfm-data from parquet file
     lastfm_df = pl.read_parquet(
         lastfm_path / "lastfm-listening-2021-2026march.parquet"
     )
     lastfm_df = lastfm_df.unique(pl.col("date_played_unix"))
+
+    # read in lastfm-data from recent data
+    db = duckdb.read_json(lastfm_path/"listening/*.jsonl")
+    lastfm_recent_df = db.pl()
+    lastfm_recent_df = ( 
+        lastfm_recent_df 
+        .with_columns(
+            pl.from_epoch(pl.col("date_played_unix"), time_unit="s").alias("track_played_utc")
+        )
+        .with_columns(
+            artist_name = pl.col("artist_name").str.to_lowercase(),
+            track_name = pl.col("track_name").str.to_lowercase(),
+            album_name = pl.col("album_name").str.to_lowercase()
+        )
+    )
+
+    # vstack parquet dataframe with recent dataframe 
+    lastfm_df = lastfm_df.vstack(lastfm_recent_df)
 
     # enrich lastfm dataframe with columns in 'spotify_df'
     lastfm_df = lastfm_df.with_columns(spotify_track_uri=pl.lit(""))
@@ -46,7 +65,7 @@ def combine_data_sources():
 
     return df.filter(
         pl.col("artist_name").is_not_null()
-    )  # some entries have no data except track played. We do not take them into consideration
+    )
 
 
 def main():

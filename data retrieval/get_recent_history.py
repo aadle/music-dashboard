@@ -1,10 +1,9 @@
 import requests
-import tomllib
 import logging
+import os
 import sys
 import pendulum
 import time
-import argparse
 import duckdb
 from typing import Dict
 from pathlib import Path
@@ -59,9 +58,9 @@ def extract_track_data(tracks:dict):
     return records_out
 
 def get_most_recent_timestamp():
-    data_dir = Path("../data/lastfm/listening")
+    data_dir = Path("data/lastfm/listening")
     db = duckdb.read_json(data_dir/"*.jsonl")
-    recent_timestamp =duckdb.query(
+    recent_timestamp = duckdb.query(
         """
         SELECT 
             date_played_unix 
@@ -73,13 +72,12 @@ def get_most_recent_timestamp():
         LIMIT 1;
         """
         ).fetchone()[0]
-
     return int(recent_timestamp)
 
 def main(client_id:str, page=1):
     setup_logging(get_current_filename())
 
-    data_dir = Path("../data/lastfm/listening")
+    data_dir = Path("data/lastfm/listening") # path relative to project root
 
     from_timestamp = get_most_recent_timestamp() + 1
     to_timestamp = int(pendulum.today().add(days=-1).timestamp())
@@ -119,7 +117,6 @@ def main(client_id:str, page=1):
             track_response = page_response["recenttracks"]["track"]
             tracks = extract_track_data(track_response)
             save_to_jsonl(tracks, filepath) # dump to file
-
         except (RequestException, ValueError) as e:
             logging.error(f"Failed to process page {page}: {e}")
             continue
@@ -131,13 +128,5 @@ def main(client_id:str, page=1):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--page", nargs="?", default=1, type=int)
-    args = parser.parse_args()
-
-    secrets = Path("../secrets")
-    with open(secrets/"lastfm.toml", "rb") as f:
-        lastfm_toml = tomllib.load(f)
-
-    lastfm_client_id = lastfm_toml["lastfm-credentials"]["client_id"]
-    main(lastfm_client_id, page=args.page)
+    lastfm_client_id = os.environ["CLIENT_ID"] # reads environment variable from GitHub Actions
+    main(lastfm_client_id)

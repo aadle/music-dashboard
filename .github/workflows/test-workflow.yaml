@@ -1,0 +1,38 @@
+name: test_etl_flow
+
+run-name: ${{ github.actor }} get artist info from Last.fm
+
+on:
+  workflow_dispatch:
+
+jobs:
+  etl-script:
+    name: python
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo content
+        uses: actions/checkout@v6
+        with:
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }} # enables committing and pushes to the repository
+
+      - name: "Set up Python"
+        uses: actions/setup-python@v6
+        with:
+          python-version-file: "pyproject.toml"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
+        with:
+          # Install a specific version of uv.
+          version: "0.11.8"
+
+      - name: Install project
+        run: uv sync --locked
+
+      - name: Extraction, transform and loading
+        env:
+          CLIENT_ID: ${{ secrets.LAST_FM_CLIENT_ID }}
+        run: |
+          uv run "data retrieval/test_retrieval.py"
+          git status

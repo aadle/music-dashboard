@@ -12,7 +12,4 @@ wheels/
 # custom
 .DS_Store
 secrets/
-*.jsonl
-*.json
-*.lock
-pyproject.toml
+

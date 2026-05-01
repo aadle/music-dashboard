@@ -1,11 +1,9 @@
-name: etl-recent-listening-history-etl
+name: test_etl_flow
 
-run-name: ${{ github.actor }} retrieving newest listening data from Last.fm
+run-name: ${{ github.actor }} get artist info from Last.fm
 
 on:
   workflow_dispatch:
-    branches:
-      - "**"
 
 jobs:
   etl-script:
@@ -36,18 +34,5 @@ jobs:
         env:
           CLIENT_ID: ${{ secrets.LAST_FM_CLIENT_ID }}
         run: |
-          uv run "data retrieval/get_recent_history.py"
-
-      - name: Check for changes
-        id: git-check
-        run: |
-          git config --local user.email "github-actions@github.com"
-          git config --local user.name "github-actions"
-          git add .
-          git diff --cached --quiet || echo "changes=true" >> $GITHUB_ENV
-
-      - name: Commit and push if changes
-        if: ${{ env.changes == 'true' }}
-        run: |
-          git commit -m "test data from retrieval script"
-          git push
+          uv run "data retrieval/test_retrieval.py"
+          git status

@@ -1,5 +1,5 @@
-name: etl demo
-run-name: ${{ github.actor }} retrieving newest listening data
+name: etl-recent-listening-history
+run-name: ${{ github.actor }} retrieving newest listening data from Last.fm
 on:
   workflow_displatch:
   schedule:
@@ -14,7 +14,7 @@ jobs:
       - name: Checkout repo content
         uses: actions/checkout@v6
         with:
-          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }} # enables committing and pushes to the repository
 
       - name: "Set up Python"
         uses: actions/setup-python@v6
@@ -30,12 +30,11 @@ jobs:
       - name: Install project
         run: uv sync --locked
 
-      - name: Test retrieval
+      - name: Extraction, transform and loading
         env:
           CLIENT_ID: ${{ secrets.LAST_FM_CLIENT_ID }}
         run: |
-          uv run "data retrieval/test_retrieval.py"
-          git status
+          uv run "data retrieval/get_recent_history.py"
 
       - name: Check for changes
         id: git-check

@@ -4,8 +4,8 @@ run-name: ${{ github.actor }} retrieving newest listening data from Last.fm
 
 on:
   workflow_dispatch:
-    schedule:
-      - cron: "0 0 * * *" # daily at midnight
+  schedule:
+    - cron: "0 0 * * MON"
 
 jobs:
   etl-script:
